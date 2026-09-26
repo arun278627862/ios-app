@@ -1,0 +1,39 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build_ios:
+    name: Build iOS App
+    runs-on: macos-latest 
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build iOS App (No Codesign)
+        run: flutter build ios --release --no-codesign
+
+      - name: Compress iOS Build
+        run: cd build/ios/iphoneos && zip -r ios_build.zip Runner.app
+
+      - name: Upload iOS Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-unsigned
+          path: build/ios/iphoneos/ios_build.zip
+          retention-days: 7
